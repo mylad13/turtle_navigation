@@ -6,7 +6,7 @@ from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, ExecuteProcess, GroupAction, IncludeLaunchDescription, LogInfo
 from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration, TextSubstitution
+from launch.substitutions import LaunchConfiguration, TextSubstitution, PathJoinSubstitution
 from launch_ros.actions import Node
 from nav2_common.launch import RewrittenYaml
 
@@ -23,6 +23,7 @@ def generate_launch_description() -> None:
     # Common settings
     use_sim_time = LaunchConfiguration("use_sim_time", default="True")
     map_yaml_file = LaunchConfiguration("map")
+    map_dir = LaunchConfiguration("map_dir")
     default_bt_xml_filename = LaunchConfiguration("default_bt_xml_filename")
     autostart = LaunchConfiguration("autostart")
     rviz_config_file = LaunchConfiguration("rviz_config")
@@ -82,15 +83,27 @@ def generate_launch_description() -> None:
         robot_name = robot["name"]
         params_file = LaunchConfiguration("robot_params_file")
 
+        # param_substitutions = {
+        #     "voxel_layer.scan.topic": [robot_name, "/scan"],
+        #     "global_costmap.obstacle_layer.scan.topic": [robot_name, "/scan"]
+        # }
+
         param_substitutions = {
             "voxel_layer.scan.topic": [robot_name, "/scan"],
-            "global_costmap.obstacle_layer.scan.topic": [robot_name, "/scan"]
+            "global_costmap.obstacle_layer.scan.topic": [robot_name, "/scan"],
+            "local_costmap.global_frame": [robot_name, "/odom"],
+            "odom_frame_id": [robot_name, "/odom"],
+            # "global_frame": [robot_name, "/odom"],
+            # "odom_topic": [robot_name, "/odom"],
         }
 
         configured_params = RewrittenYaml(
             source_file=params_file,
             param_rewrites=param_substitutions,
             convert_types=True)
+        
+        # Overwriting the map yaml file
+        map_yaml_file = PathJoinSubstitution([map_dir, robot_name, "map.yaml"])        
         
         group = GroupAction(
             [
@@ -101,6 +114,7 @@ def generate_launch_description() -> None:
                         "namespace": robot_name,
                         "use_namespace": "True",
                         "rviz_config": rviz_config_file,
+                        "use_sim_time": use_sim_time,
                     }.items(),
                 ),
                 IncludeLaunchDescription(
@@ -110,7 +124,7 @@ def generate_launch_description() -> None:
                     launch_arguments={
                         "namespace": robot_name,
                         "use_namespace": "True",
-                        "map": [robot_name, "/map"],
+                        "map": map_yaml_file,
                         "use_sim_time": use_sim_time,
                         "params_file": configured_params,
                         "default_bt_xml_filename": default_bt_xml_filename,
