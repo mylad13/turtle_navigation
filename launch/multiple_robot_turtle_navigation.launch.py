@@ -83,19 +83,19 @@ def generate_launch_description() -> None:
         robot_name = robot["name"]
         params_file = LaunchConfiguration("robot_params_file")
 
-        # param_substitutions = {
-        #     "voxel_layer.scan.topic": [robot_name, "/scan"],
-        #     "global_costmap.obstacle_layer.scan.topic": [robot_name, "/scan"]
-        # }
-
         param_substitutions = {
             "voxel_layer.scan.topic": [robot_name, "/scan"],
-            "global_costmap.obstacle_layer.scan.topic": [robot_name, "/scan"],
-            "local_costmap.global_frame": [robot_name, "/odom"],
-            "odom_frame_id": [robot_name, "/odom"],
-            # "global_frame": [robot_name, "/odom"],
-            # "odom_topic": [robot_name, "/odom"],
+            "global_costmap.obstacle_layer.scan.topic": [robot_name, "/scan"]
         }
+
+        # param_substitutions = {
+        #     "voxel_layer.scan.topic": [robot_name, "/scan"],
+        #     "global_costmap.obstacle_layer.scan.topic": [robot_name, "/scan"],
+        #     "local_costmap.global_frame": [robot_name, "/odom"],
+        #     "odom_frame_id": [robot_name, "/odom"],
+        #     # "global_frame": [robot_name, "/odom"],
+        #     # "odom_topic": [robot_name, "/odom"],
+        # }
 
         configured_params = RewrittenYaml(
             source_file=params_file,
@@ -103,8 +103,9 @@ def generate_launch_description() -> None:
             convert_types=True)
         
         # Overwriting the map yaml file
-        map_yaml_file = PathJoinSubstitution([map_dir, robot_name, "map.yaml"])        
-        
+        map_yaml_file = PathJoinSubstitution([map_dir, robot_name, "map.yaml"])
+        map_topic = [robot_name, TextSubstitution(text="/map")]        
+
         group = GroupAction(
             [
                 IncludeLaunchDescription(
