@@ -212,9 +212,6 @@ local_costmap:
 global_costmap:
   global_costmap:
     ros__parameters:
-      # track_unknown_space: True
-      # unknown_cost_value: 0 # unknown cells are marked as free
-      # trinary_costmap: False
       use_sim_time: True
       robot_radius: 0.22
       plugins: ["static_layer", "obstacle_layer", "inflation_layer"]
